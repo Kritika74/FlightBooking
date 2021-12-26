@@ -31,6 +31,21 @@
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
+				<cloudHubDeployment>
+						<uri>https://anypoint.mulesoft.com</uri>
+						<muleVersion>4.4.0</muleVersion>
+						<username>kritika74</username>
+						<password>Kashyap@12345</password>
+						<applicationName>FlightBooking-API-v1</applicationName>
+						<environment>Sandbox</environment>
+						<businessGroup>Apisero Inc</businessGroup>
+						<workerType>Micro</workerType>
+						<objectStoreV2>true</objectStoreV2>
+						<properties>
+							<anypoint.platform.client_id>fabebfd3196d44269787f085bc2bcb6b</anypoint.platform.client_id>
+							<anypoint.platform.client_secret>e405a808564741fF9C793cab7Acd05Fa</anypoint.platform.client_secret>
+						</properties>
+					</cloudHubDeployment>
 					<sharedLibraries>
 						<sharedLibrary>
 							<groupId>mysql</groupId>
