@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="error.xml" />
+	<munit:test name="GlobalError" doc:id="124587f1-ba6d-41d1-ab45-71b94d6aeaee" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock srcDestDb" doc:id="513d83aa-4d03-4f47-8cb1-3870e1b086cf" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c16b46d2-2799-4bcd-a213-f705ff5dc212" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+			
+					<munit-tools:error typeId="ANY" />
+					<munit-tools:variables >
+						<munit-tools:variable key="outboundHeaders" value="#[readUrl('classpath://SrcDesttestsuccess\mock_variable_.dwl')]" />
+						<munit-tools:variable key="source" value="#[output application/java --- readUrl('classpath://SrcDesttestsuccess\mock_variable_1.dwl')]" mediaType="application/java" encoding="UTF-8" />
+						<munit-tools:variable key="destination" value="#[output application/java --- readUrl('classpath://SrcDesttestsuccess\mock_variable_2.dwl')]" mediaType="application/java" encoding="UTF-8" />
+						<munit-tools:variable key="airline" value="#[output application/java --- readUrl('classpath://SrcDesttestsuccess\mock_variable_3.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit:set-event doc:name="Set Input" doc:id="9fd01c11-806d-4404-aa00-827c527084bc" >
+				<munit:payload value="#[readUrl('classpath://SrcDesttestsuccess\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://SrcDesttestsuccess\set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="outboundHeaders" value="#[readUrl('classpath://SrcDesttestsuccess\set-event_variable_.dwl')]" />
+					<munit:variable key="source" value="#[output application/java --- readUrl('classpath://SrcDesttestsuccess\set-event_variable_1.dwl')]" encoding="UTF-8" mediaType="application/java" />
+					<munit:variable key="destination" value="#[output application/java --- readUrl('classpath://SrcDesttestsuccess\set-event_variable_2.dwl')]" encoding="UTF-8" mediaType="application/java" />
+					<munit:variable key="airline" value="#[output application/java --- readUrl('classpath://SrcDesttestsuccess\set-event_variable_3.dwl')]" encoding="UTF-8" mediaType="application/java" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<try doc:name="Try" doc:id="6f0f4a05-a08c-4397-b56b-391f11bd7420" >
+				<flow-ref doc:name="Flow-ref to SrcDest" doc:id="4e625aa3-8b65-4c78-a692-9f241eeb8739" name="SrcDest" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="56ac0917-794e-47e8-b288-130a52f0265e" >
+						<logger level="INFO" doc:name="Logger" doc:id="db93f25d-cac1-4926-8791-c08f8c055f87" message="Continue"/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="f1c50f7e-b0fc-4ec4-bd96-44ebecac6d29" is='#[MunitTools::equalTo("ANY")]' expression="#[payload.error]"/>
+		</munit:validation>
+	
+</munit:test>
+	
+
+</mule>

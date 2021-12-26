@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:flight="http://www.mulesoft.org/schema/mule/flight" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/flight http://www.mulesoft.org/schema/mule/flight/current/mule-flight.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="5e6827b3-d245-46f6-b329-c66cf40850ed" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="d45825e1-d906-406d-8b86-07d07e0627d9" file="config.yaml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="3d56e8f5-ebcc-4718-93e8-01b0eb646970" >
+		<db:my-sql-connection host="${database.host}" port="${database.port}" user="${database.user}" password="${database.password}" database="${database.database}">
+			<reconnection >
+				<reconnect frequency="3000" />
+			</reconnection>
+		</db:my-sql-connection>
+	</db:config>
+	<flight:config name="Flight_Config" doc:name="Flight Config" doc:id="0ed6064c-f1c5-4910-b32b-7b6c15766afd" property_host="${indigo.host}" property_port="${indigo.port}" property_protocol="${indigo.protocol}" property_basePath="${indigo.basePath}" />
+	<configuration doc:name="Configuration" doc:id="2929411c-d61f-49bc-bc27-d70ca04a3c6e" defaultErrorHandler-ref="globalError_Handler" />
+	<flow name="getFlights" doc:id="4626a94e-d1b8-4d48-94cf-22d61c762a4b" >
+		<set-variable value="#[message.attributes.queryParams.airline]" doc:name="airline" doc:id="4ab5fcf8-f6b9-4fc1-b403-9b0265413496" variableName="airline"/>
+		<flow-ref doc:name="Source" doc:id="fef152c9-4cc3-4dcf-80a5-a5d7f6855095" name="setSource"/>
+		<flow-ref doc:name="Destination" doc:id="56b0be19-a484-4ab1-b79c-a2deee3ffc9d" name="setDest"/>
+		<flow-ref doc:name="SrcDestCheck" doc:id="98e87df7-4fb4-49fb-b620-e882781f76df" name="SrcDest"/>
+		<choice doc:name="Choice" doc:id="b0900ef5-b767-4b62-8570-80eb345c1902" >
+			<when expression='#[vars.airline == "indigo"]'>
+				<flow-ref doc:name="getIndigoFlights" doc:id="1ce01d95-8512-4e15-bfae-e55ff2ff92bc" name="getIndigoFlights"/>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="ee092b4c-d02f-4337-8530-11936a5d0468" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload , indexOfPayload ) ->{
+	id: payload.id,
+	airline: payload.airline,
+	source: payload.source,
+	destination: payload.destination,
+	departureDate: payload.departureDate,
+	departureTime: payload.departureTime,
+	arrivalTime: payload.arrivalTime,
+	price: payload.price
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="getIndigoFlights" doc:id="b5bfef07-1d48-494c-a990-9208e3cfa7d4" >
+		<ee:transform doc:name="Transform Message" doc:id="946de56b-73b9-464c-9188-cad0dbf3865a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter($.airline == 'indigo') map((payload,index) ->
+{
+	id: payload.id,
+	airline: payload.airline,
+	source: payload.source,
+	destination: payload.destination,
+	departureDate: payload.departureDate,
+	departureTime: payload.departureTime,
+	arrivalTime: payload.arrivalTime,
+	price: payload.price
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="40630dd4-2a5e-407c-a7de-44b8e387da5f" />
+	</flow>
+	<sub-flow name="SrcDest" doc:id="9facedb7-9741-44ce-85fb-a0f5d152d09b" >
+		<flow-ref doc:name="srcDestDb" doc:id="c16b46d2-2799-4bcd-a213-f705ff5dc212" name="srcDestDb"/>
+		<ee:transform doc:name="Transform Message" doc:id="642d6ce1-d125-40d8-9010-ef94c4ff1c5c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload , indexOfPayload ) ->{
+	id: payload.id,
+	airline: payload.airline,
+	source: payload.source,
+	destination: payload.destination,
+	departureDate: payload.departureDate,
+	departureTime: payload.departureTime,
+	arrivalTime: payload.arrivalTime,
+	price: payload.price
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d00a3a2d-c28c-4c10-b0d9-e4e85615d91c" />
+	</sub-flow>
+	<flow name="postFlights" doc:id="c9ee544e-048c-4b0f-8a4b-3c7ca465bf5e" >
+		<set-variable value="#[message.payload.id]" doc:name="flightNo" doc:id="7615e315-7f26-415c-9005-4b51d2a81351" variableName="flightNo"/>
+		<set-variable value="#[message.payload.name]" doc:name="name" doc:id="1fb54aa5-c790-448b-b9a6-ec2ab314002d" variableName="name"/>
+		<set-variable doc:name="noOfSeats" doc:id="e2700849-6de9-4a9e-aa35-a1b3499ff2fe" variableName="noOfSeats" value="#[message.payload.noOfSeats]"/>
+		<flow-ref doc:name="postFlightDb" doc:id="7d7a2a16-f8b4-428e-949d-3916e01ad579" name="postFlightDb"/>
+		<ee:transform doc:name="Transform Message" doc:id="c5b07cbb-91c5-4a25-b693-4314f95f5bdf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Flight booked successfully!!!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4cbf7a57-526c-49ab-b7a0-d397f0634591" />
+	</flow>
+	<flow name="putFlight" doc:id="9fa23a83-0011-4fbb-8e84-334abb014d53" >
+		<set-variable value="#[message.payload.id]" doc:name="bookingNo" doc:id="c2779440-aa4a-4819-95d2-e61b0afdea46" variableName="bookingNo"/>
+		<set-variable value="#[message.payload.noOfSeats]" doc:name="noOfSeatsD" doc:id="6b4ed971-ced1-4f4f-9dca-30c184086775" variableName="noOfSeatsD"/>
+		<flow-ref doc:name="putFlightDb" doc:id="65a98719-786d-41db-a2a6-e3df831a69a3" name="putFlightDb"/>
+		<ee:transform doc:name="Transform Message" doc:id="7392410c-9acc-4a1c-870a-3e9d0a9ccb67">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Your flight booking has been cancelled successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b19e3777-2522-427d-b900-5e14b5934b00" />
+	</flow>
+	<sub-flow name="setSource" doc:id="9760aa44-5ee6-4d6f-ac9f-899be9169de1" >
+		<set-variable value="#[message.attributes.queryParams.source]" doc:name="source" doc:id="adf5bacd-8a9e-4a22-b5e2-4f766c41ec9a" variableName="source"/>
+	</sub-flow>
+	<sub-flow name="setDest" doc:id="6fadf010-2105-4b82-bc5f-5303280c3f2e" >
+		<set-variable value="#[message.attributes.queryParams.destination]" doc:name="destination" doc:id="9384fa77-8a10-447f-82ac-6f8cdb54b246" variableName="destination"/>
+	</sub-flow>
+</mule>

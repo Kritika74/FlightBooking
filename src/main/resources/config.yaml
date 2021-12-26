@@ -1,0 +1,15 @@
+http:
+  port: "8081"
+
+indigo:
+  host: "sys-flight-api-rasi.us-e2.cloudhub.io"
+  port: "80"
+  basePath: "/"
+  protocol: "HTTP"
+  
+database:
+  host: "sql6.freemysqlhosting.net"
+  port: "3306"
+  user: "sql6461088"
+  password: "fU2tYkaCcZ"
+  database: "sql6461088"

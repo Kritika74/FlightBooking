@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="srcDestDb" doc:id="c385c5b1-d16e-46a7-9000-68b2dcb2995d" >
+		<db:select doc:name="srcDestDetails" doc:id="e1e6b079-1c17-41d8-b7b2-17772704866c" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM Flights WHERE source = :source AND destination = :destination]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'source' : attributes.queryParams.source, 'destination' : attributes.queryParams.destination}]]]></db:input-parameters>
+		</db:select>
+	</flow>
+	<flow name="postFlightDb" doc:id="5b102622-6314-4371-9757-75af07c1a3ad" >
+		<db:select doc:name="Select" doc:id="e754a791-d7b7-4dac-8736-f7584200e196" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM Flights WHERE id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'id' : vars.flightNo}]]]></db:input-parameters>
+		</db:select>
+		<validation:validate-size doc:name="Validate size" doc:id="3d506104-54a0-4311-a7ff-0cfa5923d34b" value="#[payload]" min="1" message="#['Invalid Flight No' ++ ' ' ++ (vars.flightNo default ' ')]"/>
+		<set-payload value="#[payload[0]]" doc:name="Set Payload" doc:id="ec4f9b66-bf9d-4f26-b787-c229b72266ac" />
+		<db:insert doc:name="Insert" doc:id="39133872-57ce-40b0-b740-67a42146d1f8" config-ref="Database_Config" >
+			<db:sql ><![CDATA[INSERT INTO FlightsBooked (custName, airline,source,destination,departureDate,departureTime,arrivalTime,price,noOfSeats,id) VALUES (:name, :airline, :source, :destination, :departureDate, :departureTime, :arrivalTime, :price, :noOfSeats, :id)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'name': vars.name, 'airline': payload.airline, 'source' : payload.source, 'destination' : payload.destination, 'departureDate' : payload.departureDate, 'departureTime' : payload.departureTime, 'arrivalTime': payload.arrivalTime, 'price': payload.price, 'noOfSeats': vars.noOfSeats, 'id': payload.id}]]]></db:input-parameters>
+		</db:insert>
+		<flow-ref doc:name="Flow Reference" doc:id="14aaae5f-723d-47d3-8230-80bbdd2b1240" name="flightBook"/>
+	</flow>
+	<flow name="flightBook" doc:id="f17852d3-a7e7-494a-ba5a-70b9bc6ddfa5" >
+		<db:select doc:name="Select" doc:id="83f4da31-3fce-4cad-b385-066ff0f8ba37" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM Flights WHERE id = :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'id' : vars.flightNo}]]]></db:input-parameters>
+		</db:select>
+		<set-payload value="#[payload[0]]" doc:name="Set Payload" doc:id="5f936dee-b16c-4312-b125-e4a927aa156b" />
+		<db:update doc:name="Update" doc:id="7650127e-3514-45eb-a9ad-7d4d9f4ec305" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE Flights SET availableSeats= :availableSeats - :noOfSeats WHERE id = :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'availableSeats': payload.availableSeats, 'noOfSeats': vars.noOfSeats, 'id':vars.flightNo}]]]></db:input-parameters>
+		</db:update>
+	</flow>
+	<flow name="putFlightDb" doc:id="3529ea8a-cbbf-4b78-9c3d-42a103e8b26b" >
+		<db:select doc:name="Select" doc:id="4e226ac2-0003-4de9-873a-253867071e19" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM FlightsBooked WHERE fno= :fno]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'fno': vars.bookingNo}]]]></db:input-parameters>
+		</db:select>
+		<validation:validate-size doc:name="Validate size" doc:id="5511feb3-db24-49ee-ada0-fa54e877862c" value="#[payload]" min="1" message="#['Invalid Booking No' ++ ' ' ++ (vars.bookingNo default ' ')]"/>
+		<set-payload value="#[payload[0]]" doc:name="Set Payload" doc:id="03f348f2-106a-44c4-9e53-becd59f46fcb" />
+		<set-variable value="#[message.payload.id]" doc:name="Id" doc:id="076d8afd-3766-42db-8885-610d44af58dd" variableName="Id"/>
+		<db:insert doc:name="Insert" doc:id="2a4bd6c8-49a3-41e8-b2a5-9e8bb27aa0d9" config-ref="Database_Config" >
+			<db:sql ><![CDATA[INSERT INTO FlightsCancelled (custName, airline,source,destination,departureDate,departureTime,arrivalTime,price,noOfSeats,id) VALUES (:name, :airline, :source, :destination, :departureDate, :departureTime, :arrivalTime, :price, :noOfSeats, :id)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'name': payload.custName, 'airline': payload.airline, 'source' : payload.source, 'destination' : payload.destination, 'departureDate' : payload.departureDate, 'departureTime' : payload.departureTime, 'arrivalTime': payload.arrivalTime, 'price': payload.price, 'noOfSeats':vars.noOfSeatsD, 'id': payload.id}]]]></db:input-parameters>
+		</db:insert>
+		<db:delete doc:name="Delete" doc:id="8caf9dc4-62b8-4e9f-9724-df1326386bcb" config-ref="Database_Config">
+			<db:sql><![CDATA[DELETE FROM FlightsBooked WHERE fno= :fno]]></db:sql>
+			<db:input-parameters><![CDATA[#[{"fno": vars.bookingNo}]]]></db:input-parameters>
+		</db:delete>
+		<flow-ref doc:name="Flow Reference" doc:id="3fb7423b-68b1-4df7-861d-936bc91d28b8" name="flightCancel" />
+	</flow>
+	<flow name="flightCancel" doc:id="171c953d-82f1-4a9f-a55c-078bbc21d407" >
+		<db:select doc:name="Select" doc:id="e6ac1d62-3b02-4769-8124-e6af198ac658" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM Flights WHERE id= :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
+		</db:select>
+		<set-payload value="#[payload[0]]" doc:name="Set Payload" doc:id="019a8e7e-1e8e-4ef3-9af2-f6408bf95d3f" />
+		<db:update doc:name="Update" doc:id="be4b625e-d3a4-48c3-ab74-e6fd5bad9586" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE Flights SET availableSeats= :availableSeats + :noOfSeats WHERE id = :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'availableSeats': payload.availableSeats, 'noOfSeats': vars.noOfSeatsD, 'id':vars.id}]]]></db:input-parameters>
+		</db:update>
+	</flow>
+</mule>

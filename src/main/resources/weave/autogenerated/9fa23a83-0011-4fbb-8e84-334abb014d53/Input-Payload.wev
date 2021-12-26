@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_9fa23a83_0011_4fbb_8e84_334abb014d53_Input_Payload = {
+  departureTime: String, 
+  arrivalTime: String, 
+  price: Number, 
+  destination: String, 
+  id?: Number, 
+  source: String, 
+  departureDate: String, 
+  airline: String, 
+  _?: Any
+}
+

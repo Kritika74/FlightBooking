@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "airline": "indigo",
+    "source": "PAT",
+    "destination": "DEL",
+    "departureDate": "2021-12-23T00:00:00",
+    "departureTime": "1970-01-01T15:09:53",
+    "arrivalTime": "1970-01-01T19:09:55",
+    "price": 1654.0
+  },
+  {
+    "id": 4,
+    "airline": "airindia",
+    "source": "PAT",
+    "destination": "DEL",
+    "departureDate": "2021-12-25T00:00:00",
+    "departureTime": "1970-01-01T15:37:09",
+    "arrivalTime": "1970-01-01T19:37:12",
+    "price": 1975.0
+  }
+]

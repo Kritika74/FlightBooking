@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="systemapi-test-suite.xml" />
+	<munit:test name="systemapi-test-suite-srcDestDbTest" doc:id="23cf9b17-cfee-4775-a63b-43058ad88a43" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to srcDestDb" doc:id="f5b48fe1-e58d-4b08-8a46-7f946ae46890" name="srcDestDb"/>
+		</munit:execution>
+	</munit:test>
+
+
+</mule>
